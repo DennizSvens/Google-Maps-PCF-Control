@@ -15,6 +15,8 @@ private _city: string = "";
 private _state: string = "";
 private _zip: string = "";
 private _country: string = "";
+private _latitude: number | null = null;
+private _longitude: number | null = null;
 
 /**
  * Empty constructor.
@@ -42,7 +44,9 @@ public init(context: ComponentFramework.Context<IInputs>, notifyOutputChanged: (
 	this._country = context.parameters.countryValue.formatted || "";
 	this._zip = context.parameters.zipValue.formatted || "";
 	this._addressString = this._street + this._city + this._state + this._zip + this._country;
-	this.renderMap(this.buildMapUrl(this._addressString, context.parameters.mapsApiKey.raw!));
+	this._latitude = context.parameters.latitude.raw || null;
+	this._longitude = context.parameters.longitude.raw || null;
+	this.renderMap(this.buildMapUrl(this._addressString, context.parameters.mapsApiKey.raw!, this._latitude, this._longitude));
 	container.appendChild(this._iFrameElement);
 }
 /**
@@ -67,11 +71,13 @@ public renderMap(mapUrl: string)
  * @param addressString : any string that can be used to search for a location in maps
  * @returns the HTML encoded url that can be used to load the map if the addressString is non empty string
  */
-public buildMapUrl(addressString :string|undefined, mapsApiKey :string|undefined):string
+public buildMapUrl(addressString :string|undefined, mapsApiKey :string|undefined, latitude: number | null, longitude: number | null):string
 {
-	if(addressString)
-	{
-		let url:string = "https://www.google.com/maps/embed/v1/place?key="+mapsApiKey+"&q=" +encodeURIComponent(addressString);
+	if(latitude !== null && longitude !== null) {
+		let url: string = `https://www.google.com/maps/embed/v1/view?key=${mapsApiKey}&center=${latitude},${longitude}&zoom=15`;
+		return url;
+	} else if (addressString) {
+		let url: string = "https://www.google.com/maps/embed/v1/place?key=" + mapsApiKey + "&q=" + encodeURIComponent(addressString);
 		return url;
 	}
 	return "";
@@ -89,7 +95,9 @@ public updateView(context: ComponentFramework.Context<IInputs>)
 	this._country = context.parameters.countryValue.formatted || "";
 	this._zip = context.parameters.zipValue.formatted || "";
 	this._addressString = this._street + this._city + this._state + this._zip + this._country;
-	this.renderMap(this.buildMapUrl(this._addressString, context.parameters.mapsApiKey.raw!));
+	this._latitude = context.parameters.latitude.raw || null;
+	this._longitude = context.parameters.longitude.raw || null;
+	this.renderMap(this.buildMapUrl(this._addressString, context.parameters.mapsApiKey.raw!, this._latitude, this._longitude));
 }
 /** 
  * It is called by the framework prior to a control receiving new data. 
